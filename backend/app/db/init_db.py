@@ -1,15 +1,16 @@
 import sqlite3
 from seeds import reservation_types
+from pathlib import Path
 
 # Pfad zur SQLite DB
-db_path = "C:/Users/Chrissi/Projects/occupied/occupied/backend/bathroom.db"
+DB_PATH = Path(__file__).resolve().parent.parent / "bathroom.db"
 
 # Pfad zur Schema-Datei
 schema_path = "schema.sql"
 
-def create_db_and_execute_schema(db_path, schema_path):
+def create_db_and_execute_schema(DB_PATH, schema_path):
     # Verbindung zur DB herstellen (erstellt die Datei, falls sie nicht existiert)
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     # Schema aus der SQL-Datei einlesen
@@ -29,7 +30,7 @@ def create_db_and_execute_schema(db_path, schema_path):
     # Änderungen speichern und Verbindung schließen
     conn.commit()
     conn.close()
-    print(f"Database '{db_path}' created and schema executed successfully.")
+    print(f"Database '{DB_PATH}' created and schema executed successfully.")
 
 if __name__ == "__main__":
-    create_db_and_execute_schema(db_path, schema_path)
+    create_db_and_execute_schema(DB_PATH, schema_path)
