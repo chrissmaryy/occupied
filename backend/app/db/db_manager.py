@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from contextlib import contextmanager
 
@@ -18,7 +18,7 @@ def get_connection():
     finally:
         conn.close()
 
-# Helpers
+#-------------------DB Helpers------------------------------------------------------
 def fetch_one(query: str, params: tuple = ()):
     with get_connection() as conn:
         cur = conn.execute(query, params)
@@ -38,7 +38,9 @@ def execute_returning_id(query: str, params: tuple = ()):
         cur = conn.execute(query, params)
         return cur.lastrowid
 
-# Operations
+#-------------------Operations------------------------------------------------------
+
+# Reservation Types
 def get_reservation_types():
     return fetch_all(
         "SELECT id, name, duration_minutes FROM reservation_types"
@@ -50,6 +52,7 @@ def get_reservation_type_by_name(name: str):
         (name,)
     )
 
+# Reservations
 def create_reservation_entry(
     user_id: int,
     reservation_type_id: int,
@@ -129,6 +132,7 @@ def delete_reservation_entry(reservation_id: int):
         (reservation_id,)
     )
 
+# User
 def create_user(username: str, password_hash: str):
     return execute_returning_id(
         """
@@ -150,9 +154,11 @@ def get_user_by_id(user_id: int):
         (user_id,)
     )
 
+##-------------------Specific Helpers------------------------------------------------
+def is_reservation_active(reservation_id: int) -> bool:
+    reservation = get_reservation_by_id(reservation_id)
+    return datetime.now() >= reservation["start_time"] and datetime.now() <= reservation["end_time"]
 
-def is_reservation_active():
-    pass
-
-def time_until_end():
-    pass
+def time_until_end(reservation_id: int) -> timedelta:
+    reservation = get_reservation_by_id(reservation_id)
+    return reservation["end_time"] - datetime.now()
