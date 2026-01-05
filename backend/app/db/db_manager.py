@@ -2,6 +2,8 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 from contextlib import contextmanager
+import secrets
+
 
 DB_PATH = Path(__file__).resolve().parent.parent / "bathroom.db"
 
@@ -130,6 +132,40 @@ def get_user_by_id(user_id: int):
     return fetch_one(
         "SELECT * FROM users WHERE id = ?",
         (user_id,)
+    )
+
+# Sessions
+SESSION_TTL = timedelta(days=7)
+
+def create_session(user_id: int) -> str:
+    session_id = secrets.token_urlsafe(32)
+    expires_at = datetime.now() + SESSION_TTL
+
+    execute(
+        """
+        INSERT INTO sessions (id, user_id, expires_at)
+        VALUES (?, ?, ?)
+        """,
+        (session_id, user_id, expires_at)
+    )
+
+    return session_id
+
+def get_session(session_id: str):
+    return fetch_one(
+        """
+        SELECT *
+        FROM sessions
+        WHERE id = ?
+          AND expires_at > ?
+        """,
+        (session_id, datetime.utcnow())
+    )
+
+def delete_session(session_id: str):
+    execute(
+        "DELETE FROM sessions WHERE id = ?",
+        (session_id,)
     )
 
 ##-------------------Specific Helpers------------------------------------------------

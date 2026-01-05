@@ -5,6 +5,14 @@ CREATE TABLE IF NOT EXISTS users (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE sessions (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    expires_at DATETIME NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+);
+
+
 CREATE TABLE IF NOT EXISTS reservation_times (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     length_in_minutes INTEGER,
