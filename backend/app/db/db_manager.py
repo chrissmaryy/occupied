@@ -112,6 +112,21 @@ def delete_reservation_entry(reservation_id: int):
         (reservation_id,)
     )
 
+def get_active_reservation_entry(now: datetime | None = None):
+    now = now or datetime.now()
+
+    return fetch_one(
+        """
+        SELECT *
+        FROM reservations
+        WHERE start_time <= ?
+          AND end_time   > ?
+        ORDER BY start_time
+        LIMIT 1
+        """,
+        (now.isoformat(), now.isoformat())
+    )
+
 # User
 def create_user(username: str, password_hash: str):
     return execute_returning_id(

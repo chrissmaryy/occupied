@@ -77,6 +77,33 @@ def delete_reservation_endpoint(reservation_id: int, current_user = Depends(get_
         return HTTPException(status_code=404, details="Reservation not found")
     return {"status": "ok"}
 
+@router.get("/active")
+def get_active_reservation_endpoint():
+    now = datetime.now()
+    reservation = get_active_reservation(now)
+
+    if reservation is None:
+        return {
+            "active": False,
+            "reservation": None
+        }
+
+    remaining_seconds = int(
+        remaining_time(reservation["id"]).total_seconds()
+    )
+
+    user_name = get_user_by_id(reservation["user_id"])
+
+    return {
+        "active": True,
+        "reservation": {
+            "id": reservation["id"],
+            "user_name": user_name,
+            "end_time": reservation["end_time"].isoformat(),
+            "seconds_remaining": max(0, remaining_seconds)
+        }
+    }
+
 # @router.post("/{id}/start-early")
 # def start_reservation_early_endpoint(reservation_id: int, current_user = Depends(get_current_user)):
 #     try:
