@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Response, HTTPException, Cookie
-from app.db.db_manager import get_user_by_username
-from app.services.auth.security import verify_password
+from app.db.db_manager import get_user_by_username, create_user
+from app.services.auth.security import *
 from app.db.db_manager import create_session, delete_session
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -34,3 +34,11 @@ def logout(
 
     response.delete_cookie("session_id")
     return {"status": "logged_out"}
+
+@router.post("/create_account")
+def create_account(
+    username: str,
+    password: str
+):
+    
+    return create_user_account(username, password)

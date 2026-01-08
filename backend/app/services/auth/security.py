@@ -1,15 +1,46 @@
-from passlib.context import CryptContext
+import os
+import hashlib
+import binascii
+from app.db.db_manager import get_user_by_username, create_user
 
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
+# --- Konfiguration ---
+ITERATIONS = 100_000
+HASH_NAME = "sha256"
+SALT_SIZE = 16  # bytes
 
+# --- Passwort hashen ---
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    salt = os.urandom(SALT_SIZE)  # einzigartig pro Passwort
+    pwd_hash = hashlib.pbkdf2_hmac(
+        HASH_NAME,
+        password.encode("utf-8"),
+        salt,
+        ITERATIONS
+    )
+    # Speicherung als hex: salt + hash
+    return f"{binascii.hexlify(salt).decode()}:{binascii.hexlify(pwd_hash).decode()}"
 
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+# --- Passwort prüfen ---
+def verify_password(password: str, stored_hash: str) -> bool:
+    salt_hex, hash_hex = stored_hash.split(":")
+    salt = binascii.unhexlify(salt_hex)
+    stored_pwd_hash = binascii.unhexlify(hash_hex)
+
+    test_hash = hashlib.pbkdf2_hmac(
+        HASH_NAME,
+        password.encode("utf-8"),
+        salt,
+        ITERATIONS
+    )
+    return test_hash == stored_pwd_hash
+
+def create_user_account(username: str, password: str):
+    if get_user_by_username(username):
+        raise ValueError("Username already taken")
+    
+    password_hashed = hash_password(password)
+    
+    return create_user(username, password_hashed)
 
 
 # from app.db.db_manager import get_user_by_username
